@@ -1,0 +1,25 @@
+dist: xenial
+
+language: go
+
+env:
+  - GO111MODULE=on
+
+cache:
+  directories:
+    - $HOME/libsodium-$LIBSODIUM_VERSION
+
+go:
+- 1.11.x
+- 1.12.x
+- master
+
+matrix:
+  allow_failures:
+    - go: master
+  fast_finish: true
+
+install:
+  - bash ./.travis/travis_install_libsodium.sh
+  - export PKG_CONFIG_PATH=$HOME/libsodium-$LIBSODIUM_VERSION/lib/pkgconfig:$PKG_CONFIG_PATH
+  - export LD_LIBRARY_PATH=$HOME/libsodium-$LIBSODIUM_VERSION/lib:$LD_LIBRARY_PATH
