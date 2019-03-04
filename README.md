@@ -1,9 +1,9 @@
-# ncryptf .Net Core
+# ncryptf Go
 
-[![AppVeyor](https://img.shields.io/appveyor/ci/ncryptf/ncryptf-core.svg?style=flat-square "TravisCI")](https://ci.appveyor.com/project/ncryptf/ncryptf-core)
-[![AppVeyor](https://img.shields.io/appveyor/tests/ncryptf/ncryptf-core.svg?style=flat-square "TravisCI")](https://ci.appveyor.com/project/ncryptf/ncryptf-core)
-[![Nuget](https://img.shields.io/nuget/vpre/ncryptf.svg?style=flat-square)](https://www.nuget.org/packages/ncryptf/)
-[![License](https://img.shields.io/badge/license-BSD-orange.svg?style=flat-square "License")](https://github.com/ncryptf/ncryptf-core/blob/master/LICENSE.md)
+[![Packagist Pre Release](https://img.shields.io/packagist/v/ncryptf/ncryptf-go.svg?maxAge=86400?style=flat-square)](https://packagist.org/packages/ncryptf/ncryptf-go)
+[![TravisCI](https://img.shields.io/travis/ncryptf/ncryptf-go.svg?style=flat-square "TravisCI")](https://travis-ci.com/ncryptf/ncryptf-go)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ncryptf/ncryptf-go)](https://goreportcard.com/report/github.com/ncryptf/ncryptf-go)
+[![License](https://img.shields.io/badge/license-BSD-orange.svg?style=flat-square "License")](https://github.com/ncryptf/ncryptf-go/blob/master/LICENSE.md)
 
 <center>
     <img src="https://github.com/ncryptf/ncryptf-go/blob/master/logo.png?raw=true" alt="ncryptf logo" width="400px"/>
