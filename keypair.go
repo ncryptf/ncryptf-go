@@ -23,7 +23,7 @@ func (k *Keypair) GetPublicKey() []byte {
 	return k.publicKey
 }
 
-// GetSecretKey returns the secret componet of the keypair
+// GetSecretKey returns the secret component of the keypair
 func (k *Keypair) GetSecretKey() []byte {
 	return k.secretKey
 }

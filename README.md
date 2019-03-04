@@ -1,6 +1,5 @@
 # ncryptf Go
 
-[![Packagist Pre Release](https://img.shields.io/packagist/v/ncryptf/ncryptf-go.svg?maxAge=86400?style=flat-square)](https://packagist.org/packages/ncryptf/ncryptf-go)
 [![TravisCI](https://img.shields.io/travis/ncryptf/ncryptf-go.svg?style=flat-square "TravisCI")](https://travis-ci.com/ncryptf/ncryptf-go)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ncryptf/ncryptf-go)](https://goreportcard.com/report/github.com/ncryptf/ncryptf-go)
 [![License](https://img.shields.io/badge/license-BSD-orange.svg?style=flat-square "License")](https://github.com/ncryptf/ncryptf-go/blob/master/LICENSE.md)

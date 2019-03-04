@@ -46,15 +46,15 @@ func NewInstance(t *testing.T) Instance {
 	assert.Equal(t, err, nil, "Error is not set")
 
 	var testCases = []TestCase{
-		TestCase{"GET", "/api/v1/test", ""},
-		TestCase{"GET", "/api/v1/test?foo=bar", ""},
-		TestCase{"GET", "/api/v1/test?foo=bar&a[a]=1", ""},
-		TestCase{"POST", "/api/v1/test", "{\"foo\":\"bar\"}"},
-		TestCase{"POST", "/api/v1/test", "{\"foo\":1}"},
-		TestCase{"POST", "/api/v1/test", "{\"foo\":false}"},
-		TestCase{"POST", "/api/v1/test", "{\"foo\":1.023}"},
-		TestCase{"DELETE", "/api/v1/test", "{\"alpha\": [\"a\", \"b\", \"c\"],\"obj\": {\"ints\": [1, 2, 3],\"floats\": [0.0, 1.1, 1.2, 1.3],\"bools\": [true, false],\"nil\": null,\"int\": 13,\"float\": 3.1415,\"bool\": true,\"nesting\": {\"nested\": true}}}"},
-		TestCase{"DELETE", "/api/v1/test?foo=bar", "{\"alpha\": [\"a\", \"b\", \"c\"],\"obj\": {\"ints\": [1, 2, 3],\"floats\": [0.0, 1.1, 1.2, 1.3],\"bools\": [true, false],\"nil\": null,\"int\": 13,\"float\": 3.1415,\"bool\": true,\"nesting\": {\"nested\": true}}}"},
+		{"GET", "/api/v1/test", ""},
+		{"GET", "/api/v1/test?foo=bar", ""},
+		{"GET", "/api/v1/test?foo=bar&a[a]=1", ""},
+		{"POST", "/api/v1/test", "{\"foo\":\"bar\"}"},
+		{"POST", "/api/v1/test", "{\"foo\":1}"},
+		{"POST", "/api/v1/test", "{\"foo\":false}"},
+		{"POST", "/api/v1/test", "{\"foo\":1.023}"},
+		{"DELETE", "/api/v1/test", "{\"alpha\": [\"a\", \"b\", \"c\"],\"obj\": {\"ints\": [1, 2, 3],\"floats\": [0.0, 1.1, 1.2, 1.3],\"bools\": [true, false],\"nil\": null,\"int\": 13,\"float\": 3.1415,\"bool\": true,\"nesting\": {\"nested\": true}}}"},
+		{"DELETE", "/api/v1/test?foo=bar", "{\"alpha\": [\"a\", \"b\", \"c\"],\"obj\": {\"ints\": [1, 2, 3],\"floats\": [0.0, 1.1, 1.2, 1.3],\"bools\": [true, false],\"nil\": null,\"int\": 13,\"float\": 3.1415,\"bool\": true,\"nesting\": {\"nested\": true}}}"},
 	}
 
 	var v1SignatureResults = []string{
