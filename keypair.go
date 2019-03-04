@@ -2,8 +2,6 @@ package ncryptf
 
 import (
 	"errors"
-
-	"github.com/jamesruan/sodium"
 )
 
 var (
@@ -16,22 +14,22 @@ var (
 
 // Keypair structure
 type Keypair struct {
-	secretKey sodium.Bytes
-	publicKey sodium.Bytes
+	secretKey []byte
+	publicKey []byte
 }
 
 // GetPublicKey returns the public component of the keypair
-func (k *Keypair) GetPublicKey() sodium.Bytes {
+func (k *Keypair) GetPublicKey() []byte {
 	return k.publicKey
 }
 
 // GetSecretKey returns the secret componet of the keypair
-func (k *Keypair) GetSecretKey() sodium.Bytes {
+func (k *Keypair) GetSecretKey() []byte {
 	return k.secretKey
 }
 
 // NewKeypair function to create a new Keypair
-func NewKeypair(secretKey sodium.Bytes, publicKey sodium.Bytes) (*Keypair, error) {
+func NewKeypair(secretKey []byte, publicKey []byte) (*Keypair, error) {
 	if len(secretKey)%16 != 0 {
 		return nil, ErrKeypairSecretKeySize
 	}
