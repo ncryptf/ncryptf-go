@@ -11,5 +11,8 @@ func (k randomBytes) Size() int {
 }
 
 type jsonAuthorization struct {
-	access_token, date, hmac, salt string
+	AccessToken string `json:"access_token"`
+	Date        string
+	Hmac        string
+	Salt        string
 }

@@ -40,7 +40,7 @@ func TestV2HMAC(t *testing.T) {
 		ja := jsonAuthorization{}
 		err = json.Unmarshal(j, &ja)
 		assert.Equal(t, nil, err, "Error is nil")
-		hmac, err := base64.StdEncoding.DecodeString(ja.hmac)
+		hmac, err := base64.StdEncoding.DecodeString(ja.Hmac)
 		assert.Equal(t, nil, err, "Error is nil")
 		assert.Equal(t, false, auth.Verify(hmac, *auth, 90), "Verify fails")
 	}
