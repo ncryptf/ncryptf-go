@@ -7,14 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type randomBytes struct {
-	sodium.Bytes
-}
-
-func (k randomBytes) Size() int {
-	return 32
-}
-
 func TestZero(t *testing.T) {
 	data := randomBytes{}
 	sodium.Randomize(&data)

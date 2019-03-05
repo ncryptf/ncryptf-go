@@ -19,7 +19,7 @@ func Derive(httpMethod string, uri string, salt []byte, date time.Time, payload 
 
 	hash := getSignatureHash(payload, salt, version)
 	b64Salt := base64.StdEncoding.EncodeToString(salt)
-	timestamp := date.Format("Mon, 2 Jan 2006 15:04:05")
+	timestamp := date.UTC().Format("Mon, 02 Jan 2006 15:04:05 +0000")
 
 	return hash + "\n" +
 		httpMethod + "+" + uri + "\n" +
