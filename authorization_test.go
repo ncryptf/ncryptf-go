@@ -35,7 +35,7 @@ func TestV2HMAC(t *testing.T) {
 
 		header := instance.v2HMACHeaders[index]
 		assert.Equal(t, header, auth.GetHeader(), "V2 Headers match")
-		j, err := base64.StdEncoding.DecodeString(strings.Replace(header, "HMAC ", "", 0))
+		j, err := base64.StdEncoding.DecodeString(strings.Replace(header, "HMAC ", "", -1))
 		assert.Equal(t, nil, err, "Error is nil")
 		ja := jsonAuthorization{}
 		err = json.Unmarshal(j, &ja)

@@ -71,7 +71,7 @@ func (a *Authorization) GetHeader() string {
 
 	if a.version == 2 {
 		json := "{\"access_token\":\"" + a.token.accessToken + "\",\"date\":\"" + a.GetDateString() + "\",\"hmac\":\"" + hmac + "\",\"salt\":\"" + salt + "\",\"v\":2}"
-		json = strings.Replace(json, "/", "\\/", 0)
+		json = strings.Replace(json, "/", "\\/", -1)
 		return "HMAC " + base64.StdEncoding.EncodeToString([]byte(json))
 	}
 
