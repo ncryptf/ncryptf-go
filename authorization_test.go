@@ -15,13 +15,13 @@ func TestV1HMAC(t *testing.T) {
 
 	for index, test := range instance.testCases {
 		auth, err := NewAuthorization(test.method, test.uri, instance.token, instance.date, test.payload, 1, instance.salt)
-		assert.Equal(t, nil, err, "Error is nil")
+		assert.Nil(t, err)
 
 		header := instance.v1HMACHeaders[index]
 		assert.Equal(t, header, auth.GetHeader(), "V1 Headers match")
 		r := strings.Split(header, ",")
 		hmac, err := base64.StdEncoding.DecodeString(r[1])
-		assert.Equal(t, nil, err, "Error is nil")
+		assert.Nil(t, err)
 		assert.Equal(t, false, auth.Verify(hmac, *auth, 90), "Verify fails")
 	}
 }
@@ -31,17 +31,17 @@ func TestV2HMAC(t *testing.T) {
 
 	for index, test := range instance.testCases {
 		auth, err := NewAuthorization(test.method, test.uri, instance.token, instance.date, test.payload, 2, instance.salt)
-		assert.Equal(t, nil, err, "Error is nil")
+		assert.Nil(t, err)
 
 		header := instance.v2HMACHeaders[index]
 		assert.Equal(t, header, auth.GetHeader(), "V2 Headers match")
 		j, err := base64.StdEncoding.DecodeString(strings.Replace(header, "HMAC ", "", -1))
-		assert.Equal(t, nil, err, "Error is nil")
+		assert.Nil(t, err)
 		ja := jsonAuthorization{}
 		err = json.Unmarshal(j, &ja)
-		assert.Equal(t, nil, err, "Error is nil")
+		assert.Nil(t, err)
 		hmac, err := base64.StdEncoding.DecodeString(ja.Hmac)
-		assert.Equal(t, nil, err, "Error is nil")
+		assert.Nil(t, err)
 		assert.Equal(t, false, auth.Verify(hmac, *auth, 90), "Verify fails")
 	}
 }
@@ -51,7 +51,7 @@ func TestVerify(t *testing.T) {
 
 	for _, test := range instance.testCases {
 		auth, err := NewAuthorization(test.method, test.uri, instance.token, time.Now(), test.payload, 1, instance.salt)
-		assert.Equal(t, nil, err, "Error is nil")
+		assert.Nil(t, err)
 
 		assert.Equal(t, true, auth.Verify(auth.GetHMAC(), *auth, 90), "Verify succeeds")
 

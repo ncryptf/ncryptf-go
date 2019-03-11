@@ -25,15 +25,95 @@ type Instance struct {
 	v2HMACHeaders      []string
 }
 
+type RequestResponseData struct {
+	clientKeyPairSecret []byte
+	clientKeyPairPublic []byte
+
+	serverKeyPairSecret []byte
+	serverKeyPairPublic []byte
+
+	signatureKeyPairSecret []byte
+	signatureKeyPairPublic []byte
+
+	nonce []byte
+
+	expectedCipher    []byte
+	expectedSignature []byte
+
+	expectedv2Cipher []byte
+
+	payload string
+}
+
+func NewRequestResponseData(t *testing.T) RequestResponseData {
+
+	clientKeyPairSecret, err := base64.StdEncoding.DecodeString("bvV/vnfB43spmprI8aBK/Fd8xxSBlx7EhuxfxxTVI2o=")
+	assert.Nil(t, err)
+
+	clientKeyPairPublic, err := base64.StdEncoding.DecodeString("Ojnr0KQy6GJ6x+eQa+wNwdHejZo8vY5VNyZY5NfwBjU=")
+	assert.Nil(t, err)
+
+	serverKeyPairSecret, err := base64.StdEncoding.DecodeString("gH1+ileX1W5fMeOWue8HxdREnK04u72ybxCQgivWoZ4=")
+	assert.Nil(t, err)
+
+	serverKeyPairPublic, err := base64.StdEncoding.DecodeString("YU74X2OqHujLVDH9wgEHscD5eyiLPvcugRUZG6R3BB8=")
+	assert.Nil(t, err)
+
+	signatureKeyPairSecret, err := base64.StdEncoding.DecodeString("9wdUWlSW2ZQB6ImeUZ5rVqcW+mgQncN1Cr5D2YvFdvEi42NKK/654zGtxTSOcNHPEwtFAz0A4k0hwlIFopZEsQ==")
+	assert.Nil(t, err)
+
+	signatureKeyPairPublic, err := base64.StdEncoding.DecodeString("IuNjSiv+ueMxrcU0jnDRzxMLRQM9AOJNIcJSBaKWRLE=")
+	assert.Nil(t, err)
+
+	nonce, err := base64.StdEncoding.DecodeString("bulRnKt/BvwnwiCMBLvdRM5+yNFP38Ut")
+	assert.Nil(t, err)
+
+	expectedCipher, err := base64.StdEncoding.DecodeString("1odrjBif71zRcZidfhEzSb80rXGJGB1J3upTb+TwhpxmFjXOXjwSDw45e7p/+FW4Y0/FDuLjHfGghOG0UC7j4xmX8qIVYUdbKCB/dLn34HQ0D0NIM6N9Qj83bpS5XgK1o+luonc0WxqA3tdXTcgkd2D+cSSSotJ/s+5fqN3w5xsKc7rKb1p3MpvRzyEmdNgJCFOk8EErn0bolz9LKyPEO0A2Mnkzr19bDwsgD1DGEYlo0i9KOw06RpaZRz2J+OJ+EveIlQGDdLT8Gh+nv65TOKJqCswOly0=")
+	assert.Nil(t, err)
+
+	expectedSignature, err := base64.StdEncoding.DecodeString("dcvJclMxEx7pcW/jeVm0mFHGxVksY6h0/vNkZTfVf+wftofnP+yDFdrNs5TtZ+FQ0KEOm6mm9XUMXavLaU9yDg==")
+	assert.Nil(t, err)
+
+	expectedv2Cipher, err := base64.StdEncoding.DecodeString("3iWQAm7pUZyrfwb8J8IgjAS73UTOfsjRT9/FLTo569CkMuhiesfnkGvsDcHR3o2aPL2OVTcmWOTX8AY11odrjBif71zRcZidfhEzSb80rXGJGB1J3upTb+TwhpxmFjXOXjwSDw45e7p/+FW4Y0/FDuLjHfGghOG0UC7j4xmX8qIVYUdbKCB/dLn34HQ0D0NIM6N9Qj83bpS5XgK1o+luonc0WxqA3tdXTcgkd2D+cSSSotJ/s+5fqN3w5xsKc7rKb1p3MpvRzyEmdNgJCFOk8EErn0bolz9LKyPEO0A2Mnkzr19bDwsgD1DGEYlo0i9KOw06RpaZRz2J+OJ+EveIlQGDdLT8Gh+nv65TOKJqCswOly0i42NKK/654zGtxTSOcNHPEwtFAz0A4k0hwlIFopZEsXXLyXJTMRMe6XFv43lZtJhRxsVZLGOodP7zZGU31X/sH7aH5z/sgxXazbOU7WfhUNChDpuppvV1DF2ry2lPcg4SwqYwa53inoY2+eCPP4Hkp/PKhSOEMFlWV+dlQirn6GGf5RQSsQ7ti/QCvi/BRIhb3ZHiPptZJZIbYwqIpvYu")
+	assert.Nil(t, err)
+
+	payload := "{\n" +
+		"    \"foo\": \"bar\",\n" +
+		"    \"test\": {\n" +
+		"        \"true\": false,\n" +
+		"        \"zero\": 0.0,\n" +
+		"        \"a\": 1,\n" +
+		"        \"b\": 3.14,\n" +
+		"        \"nil\": null,\n" +
+		"        \"arr\": [\n" +
+		"            \"a\", \"b\", \"c\", \"d\"\n" +
+		"        ]\n" +
+		"    }\n" +
+		"}"
+
+	return RequestResponseData{
+		clientKeyPairSecret:    clientKeyPairSecret,
+		clientKeyPairPublic:    clientKeyPairPublic,
+		serverKeyPairSecret:    serverKeyPairSecret,
+		serverKeyPairPublic:    serverKeyPairPublic,
+		signatureKeyPairSecret: signatureKeyPairSecret,
+		signatureKeyPairPublic: signatureKeyPairPublic,
+		nonce:                  nonce,
+		expectedCipher:         expectedCipher,
+		expectedSignature:      expectedSignature,
+		expectedv2Cipher:       expectedv2Cipher,
+		payload:                payload}
+}
+
 func NewInstance(t *testing.T) Instance {
 
 	var date = time.Unix(1533310068, 0)
 
 	ikm, err := base64.StdEncoding.DecodeString("f2mTaH9vkZZQyF7SxVeXDlOSDbVwjUzhdXv2T/YYO8k=")
-	assert.Equal(t, err, nil, "Error is not set")
+	assert.Nil(t, err)
 
 	signature, err := base64.StdEncoding.DecodeString("7v/CdiGoEI7bcj7R2EyDPH5nrCd2+7rHYNACB+Kf2FMx405und2KenGjNpCBPv0jOiptfHJHiY3lldAQTGCdqw==")
-	assert.Equal(t, err, nil, "Error is not set")
+	assert.Nil(t, err)
 
 	var token = Token{
 		accessToken:  "x2gMeJ5Np0CcKpZav+i9iiXeQBtaYMQ/yeEtcOgY3J",
@@ -43,7 +123,7 @@ func NewInstance(t *testing.T) Instance {
 		expiresAt:    (date.Add(time.Hour * 4)).Unix()}
 
 	salt, err := base64.StdEncoding.DecodeString("efEY/IJdAbi474TtQCCjj2y1FGB4BFFPpbHm/1QtpyI=")
-	assert.Equal(t, err, nil, "Error is not set")
+	assert.Nil(t, err)
 
 	var testCases = []TestCase{
 		{"GET", "/api/v1/test", ""},

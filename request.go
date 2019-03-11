@@ -25,6 +25,12 @@ var (
 	// ErrRequestSign an error for when signing fails
 	ErrRequestSign = errors.New("Unable to sign request")
 
+	// ErrRequestSecretKeyLength an error for when the secret key length is not correct
+	ErrRequestSecretKeyLength = fmt.Errorf("Secret key should be %d bytes", C.crypto_box_SECRETKEYBYTES)
+
+	// ErrRequestSignatureKeyLength an error for when the signature key length is not correct
+	ErrRequestSignatureKeyLength = fmt.Errorf("Signature key should be %d bytes", C.crypto_sign_SECRETKEYBYTES)
+
 	// ErrRequestPublicKeyLength an error for when the public key length is not correct
 	ErrRequestPublicKeyLength = fmt.Errorf("Public key should be %d bytes", C.crypto_box_PUBLICKEYBYTES)
 
@@ -113,7 +119,7 @@ func (r *Request) EncryptWithNonce(data string, publicKey []byte, version int, n
 			(*C.uchar)(unsafe.Pointer(db)),
 			C.ulonglong(len(payload)),
 			(*C.uchar)(unsafe.Pointer(&r.nonce[0])),
-			C.size_t(len(r.nonce)))) != 0 {
+			C.size_t(len(r.nonce)))) == 0 {
 			stream.Write(checksum)
 			return stream.Bytes(), nil
 		}
@@ -144,7 +150,7 @@ func (r *Request) encryptBody(data string, publicKey []byte, nonce []byte) ([]by
 		C.ulonglong(len(message)),
 		(*C.uchar)(unsafe.Pointer(&r.nonce[0])),
 		(*C.uchar)(unsafe.Pointer(&publicKey[0])),
-		(*C.uchar)(unsafe.Pointer(&r.secretKey[0])))) != 0 {
+		(*C.uchar)(unsafe.Pointer(&r.secretKey[0])))) == 0 {
 		return cipher, nil
 	}
 
@@ -158,11 +164,11 @@ func (r *Request) Sign(data string) ([]byte, error) {
 	db := bytePointer(message)
 
 	if int(C.crypto_sign_detached(
-		(*C.uchar)(unsafe.Pointer(&signature[0])),
+		(*C.uchar)(&signature[0]),
 		nil,
 		(*C.uchar)(unsafe.Pointer(db)),
 		C.ulonglong(len(message)),
-		(*C.uchar)(unsafe.Pointer(&r.secretKey[0])))) != 0 {
+		(*C.uchar)(&r.signatureSecretKey[0]))) == 0 {
 		return signature, nil
 	}
 
@@ -172,4 +178,17 @@ func (r *Request) Sign(data string) ([]byte, error) {
 // GetNonce returns a 24 byte nonce
 func (r *Request) GetNonce() []byte {
 	return r.nonce
+}
+
+// NewRequest returns a new request instance
+func NewRequest(secretKey []byte, signatureSecretKey []byte) (*Request, error) {
+	if len(secretKey) != C.crypto_box_SECRETKEYBYTES {
+		return nil, ErrRequestSecretKeyLength
+	}
+
+	if len(signatureSecretKey) != C.crypto_sign_SECRETKEYBYTES {
+		return nil, ErrRequestSignatureKeyLength
+	}
+
+	return &Request{secretKey: secretKey, signatureSecretKey: signatureSecretKey, nonce: nil}, nil
 }

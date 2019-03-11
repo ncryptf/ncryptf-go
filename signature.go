@@ -48,10 +48,3 @@ func getSignatureHash(data string, salt []byte, version int) string {
 	hash.Write([]byte(data))
 	return strings.ToLower(fmt.Sprintf("%x", hash.Sum(nil)))
 }
-
-func bytePointer(b []byte) *uint8 {
-	if len(b) > 0 {
-		return &b[0]
-	}
-	return nil
-}

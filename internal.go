@@ -16,3 +16,10 @@ type jsonAuthorization struct {
 	Hmac        string
 	Salt        string
 }
+
+func bytePointer(b []byte) *uint8 {
+	if len(b) > 0 {
+		return &b[0]
+	}
+	return nil
+}
