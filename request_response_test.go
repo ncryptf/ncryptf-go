@@ -24,7 +24,16 @@ func TestV2DecryptWithSmallPayload(t *testing.T) {
 }
 
 func TestV1DecryptWithSmallPayload(t *testing.T) {
+	d := NewRequestResponseData(t)
+	cipher := make([]byte, 15)
 
+	response, err := NewResponse(d.serverKeyPairSecret)
+	assert.Nil(t, err)
+
+	result, err := response.DecryptWithPublicKey(cipher, d.clientKeyPairPublic)
+	assert.Equal(t, "", result, "Result is empty")
+	assert.NotNil(t, err)
+	assert.Equal(t, ErrResponseMessageLength, err, "Errors are equal")
 }
 
 func TestV1EncryptDecrypt(t *testing.T) {
