@@ -53,12 +53,29 @@ Supporting API's will return the following payload containing at minimum the fol
 After extracting the elements, we can create signed request by doing the following:
 
 ```go
+import "github.com/ncryptf/ncryptf-go"
+import "encoding/base64"
+
+accessToken := "7XF56VIP7ZQQOLGHM6MRIK56S2QS363ULNB5UKNFMJRQVYHQH7IA"
+refreshToken := "MA2JX5FXWS57DHW4OIHHQDCJVGS3ZKKFCL7XM4GNOB567I6ER4LQ"
+ikm := base64.StdEncoding.DecodeFromString("bDEyECRvKKE8w81fX4hz/52cvHsFPMGeJ+a9fGaVvWM=")
+ikm := base64.StdEncoding.DecodeFromString("7v/CdiGoEI7bcj7R2EyDPH5nrCd2+7rHYNACB+Kf2FMx405und2KenGjNpCBPv0jOiptfHJHiY3lldAQTGCdqw==")
+expiresAt := 1472678411
+
+token, err := NewToken(accessToken, refreshToken, ikm, signing, expiresAt)
+if err != nil {
+    auth, err := NewAuthorization("POST", "/api/v1/test", token, time.Now(), "{\"foo\":\"bar\"}", nil, nil)
+
+    if err != nil {
+        header := auth.GetHeader()
+    }
+    // Handle authorization failure
+}
+
+// Handle token parsing failure
 ```
 
-A trivial full example is shown as follows:
-
-```go
-```
+> Note that the `date` property should be pore-offset when calling `Authorization` to prevent time skewing.
 
 The `payload` parameter should be a JSON serializable string.
 
@@ -67,6 +84,7 @@ The `payload` parameter should be a JSON serializable string.
 The Version 2 HMAC header, for API's that support it can be retrieved by calling:
 
 ```go
+header := auth.GetHeader()
 ```
 
 ### Version 1 HMAC Header
@@ -74,6 +92,11 @@ The Version 2 HMAC header, for API's that support it can be retrieved by calling
 For API's using version 1 of the HMAC header, call `Authorization` with the optional `version` parameter set to `1` for the 6th parameter.
 
 ```go
+ auth, err := NewAuthorization("POST", "/api/v1/test", token, time.Now(), "{\"foo\":\"bar\"}", 1, nil)
+
+if err != nil {
+    header := auth.GetHeader()
+}
 ```
 
 This string can be used in the `Authorization` Header
@@ -126,6 +149,31 @@ func GenerateSigningKeypair() *Keypair {
 Payloads can be encrypted as follows:
 
 ```go
+import "github.com/ncryptf/ncryptf-go"
+import "encoding/base64"
+
+payload := "{\"foo\":\"bar\"}"
+
+// Generate your signing keypair or use your own
+kp := GenerateKeypair()
+sk := GenerateSigningKeypair()
+
+// Mock for a remote public key
+rk := GenerateKeypair()
+
+req, err := NewRequest(kp.GetSecretKey(), sk.GetSecretKey())
+if err != nil {
+    // Error when generating the request struct
+}
+
+cipher, err := request.Encrypt(payload, rk.GetPublicKey())
+if err != nil {
+    // Error encrypting the message
+}
+
+message := base64.StdEncoding.EncodeToString(cipher)
+
+// Do your http request with message here
 ```
 
 
@@ -136,8 +184,23 @@ Payloads can be encrypted as follows:
 Responses from the server can be decrypted as follows:
 
 ```go
-```
+import "github.com/ncryptf/ncryptf-go"
+import "encoding/base64"
 
+// Assuming http.Client is doing your http request
+resp, err := client.Do(req)
+
+defer resp.Body.Close()
+
+bodyBytes, err := ioutil.ReadAll(resp.Body)
+bodyString := string(bodyBytes)
+responseBody, err := base64.StdEncoding.DecodeString(bodyString)
+
+response, err := NewResponse(kp.GetSecretKey())
+message, err := response.Decrypt(responseBody)
+
+// Message contains your decrypted string
+```
 
 ### V2 Encrypted Payload
 
