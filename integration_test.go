@@ -324,9 +324,82 @@ func TestAuthenticatedEchoWithEncryptedRequest(t *testing.T) {
 }
 
 func TestAuthenticatedEchoWithBadSignature(t *testing.T) {
+	authToken := auth(t)
+	assert.NotNil(t, authToken)
 
+	sk := GenerateSigningKeypair()
+	assert.NotNil(t, sk)
+
+	stack := ekb(t)
+	url, token, kp := setup(t)
+
+	client := &http.Client{}
+
+	payload := "{\"hello\":\"world\"}"
+
+	request, err := NewRequest(kp.GetSecretKey(), sk.GetSecretKey())
+	assert.Nil(t, err)
+
+	pl, err := request.Encrypt(payload, stack.pubkey)
+	assert.Nil(t, err)
+	encryptedPayload := base64.StdEncoding.EncodeToString(pl)
+
+	req, err := http.NewRequest("PUT", url+"/echo", strings.NewReader(encryptedPayload))
+	assert.Nil(t, err)
+
+	req.Header.Set("Accept", "application/vnd.ncryptf+json")
+	req.Header.Set("Content-Type", "application/vnd.ncryptf+json")
+	req.Header.Set("X-HashId", stack.hashid)
+
+	if token != "" {
+		req.Header.Set("X-Access-Token", token)
+	}
+
+	auth, err := NewAuthorization("PUT", "/echo", *authToken, time.Now(), payload, 2, nil)
+	assert.Nil(t, err)
+
+	req.Header.Set("Authorization", auth.GetHeader())
+
+	resp, err := client.Do(req)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 401, resp.StatusCode, "Status is 401")
+	defer resp.Body.Close()
 }
 
 func TestMalformedEncryptedRequest(t *testing.T) {
+	sk := GenerateSigningKeypair()
+	assert.NotNil(t, sk)
 
+	stack := ekb(t)
+	url, token, kp := setup(t)
+
+	client := &http.Client{}
+
+	payload := "{\"hello\":\"world\"}"
+
+	request, err := NewRequest(kp.GetSecretKey(), sk.GetSecretKey())
+	assert.Nil(t, err)
+
+	pl, err := request.Encrypt(payload, stack.pubkey)
+	copy(pl[60:96], "0")
+	assert.Nil(t, err)
+	encryptedPayload := base64.StdEncoding.EncodeToString(pl)
+
+	req, err := http.NewRequest("PUT", url+"/echo", strings.NewReader(encryptedPayload))
+	assert.Nil(t, err)
+
+	req.Header.Set("Accept", "application/vnd.ncryptf+json")
+	req.Header.Set("Content-Type", "application/vnd.ncryptf+json")
+	req.Header.Set("X-HashId", stack.hashid)
+
+	if token != "" {
+		req.Header.Set("X-Access-Token", token)
+	}
+
+	resp, err := client.Do(req)
+	assert.Nil(t, err)
+
+	assert.Equal(t, 400, resp.StatusCode, "Status is 400")
+	defer resp.Body.Close()
 }
