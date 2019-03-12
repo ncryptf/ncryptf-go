@@ -110,7 +110,7 @@ func (r *Request) EncryptWithNonce(data string, publicKey []byte, version int, n
 
 		payload := stream.Bytes()
 
-		checksum := make([]byte, C.crypto_generichash_BYTES)
+		checksum := make([]byte, 64)
 		db := bytePointer(payload)
 
 		if int(C.crypto_generichash(
@@ -164,7 +164,7 @@ func (r *Request) Sign(data string) ([]byte, error) {
 	db := bytePointer(message)
 
 	if int(C.crypto_sign_detached(
-		(*C.uchar)(&signature[0]),
+		(*C.uchar)(unsafe.Pointer(&signature[0])),
 		nil,
 		(*C.uchar)(unsafe.Pointer(db)),
 		C.ulonglong(len(message)),

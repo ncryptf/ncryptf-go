@@ -167,10 +167,11 @@ func (r *Response) decryptBody(response []byte, publicKey []byte, nonce []byte) 
 	}
 
 	message := make([]byte, len(response)-C.crypto_box_MACBYTES)
+	m := bytePointer(message)
 	db := bytePointer(response)
 
 	if int(C.crypto_box_open_easy(
-		(*C.uchar)(&message[0]),
+		(*C.uchar)(m),
 		(*C.uchar)(unsafe.Pointer(db)),
 		C.ulonglong(len(response)),
 		(*C.uchar)(&nonce[0]),
@@ -197,7 +198,7 @@ func IsSignatureValid(response string, signature []byte, publicKey []byte) (bool
 	db := bytePointer(message)
 
 	result := int(C.crypto_sign_verify_detached(
-		(*C.uchar)(&signature[0]),
+		(*C.uchar)(unsafe.Pointer(&signature[0])),
 		(*C.uchar)(unsafe.Pointer(db)),
 		C.ulonglong(len(message)),
 		(*C.uchar)(&publicKey[0])))
