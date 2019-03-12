@@ -1,6 +1,10 @@
 package ncryptf
 
-import "github.com/jamesruan/sodium"
+import (
+	"io"
+
+	"github.com/jamesruan/sodium"
+)
 
 type randomBytes struct {
 	sodium.Bytes
@@ -22,4 +26,16 @@ func bytePointer(b []byte) *uint8 {
 		return &b[0]
 	}
 	return nil
+}
+
+// Helper function to get first 32 bytes of HMAC
+func streamToBytes(stream io.Reader) []byte {
+	out := make([]byte, 32)
+
+	n, err := io.ReadFull(stream, out)
+	if n != 32 || err != nil {
+		return nil
+	}
+
+	return out
 }

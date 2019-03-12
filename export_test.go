@@ -116,11 +116,11 @@ func NewInstance(t *testing.T) Instance {
 	assert.Nil(t, err)
 
 	var token = Token{
-		accessToken:  "x2gMeJ5Np0CcKpZav+i9iiXeQBtaYMQ/yeEtcOgY3J",
-		refreshToken: "LRSEe5zHb1aq20Hr9te2sQF8sLReSkO8bS1eD/9LDM8",
-		ikm:          ikm,
-		signature:    signature,
-		expiresAt:    (date.Add(time.Hour * 4)).Unix()}
+		AccessToken:  "x2gMeJ5Np0CcKpZav+i9iiXeQBtaYMQ/yeEtcOgY3J",
+		RefreshToken: "LRSEe5zHb1aq20Hr9te2sQF8sLReSkO8bS1eD/9LDM8",
+		IKM:          ikm,
+		Signature:    signature,
+		ExpiresAt:    (date.Add(time.Hour * 4)).Unix()}
 
 	salt, err := base64.StdEncoding.DecodeString("efEY/IJdAbi474TtQCCjj2y1FGB4BFFPpbHm/1QtpyI=")
 	assert.Nil(t, err)

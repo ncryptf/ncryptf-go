@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
-	"io"
 	"math"
 	"strings"
 	"time"
@@ -70,12 +69,12 @@ func (a *Authorization) GetHeader() string {
 	hmac := a.GetEncodedHMAC()
 
 	if a.version == 2 {
-		json := "{\"access_token\":\"" + a.token.accessToken + "\",\"date\":\"" + a.GetDateString() + "\",\"hmac\":\"" + hmac + "\",\"salt\":\"" + salt + "\",\"v\":2}"
+		json := "{\"access_token\":\"" + a.token.AccessToken + "\",\"date\":\"" + a.GetDateString() + "\",\"hmac\":\"" + hmac + "\",\"salt\":\"" + salt + "\",\"v\":2}"
 		json = strings.Replace(json, "/", "\\/", -1)
 		return "HMAC " + base64.StdEncoding.EncodeToString([]byte(json))
 	}
 
-	return "HMAC " + a.token.accessToken + "," + hmac + "," + salt
+	return "HMAC " + a.token.AccessToken + "," + hmac + "," + salt
 }
 
 // Verify returns true if the provided hmac, authorixzation, and drift allowance is acceptable
@@ -111,7 +110,7 @@ func NewAuthorization(httpMethod string, uri string, token Token, date time.Time
 	}
 
 	signature := Derive(httpMethod, uri, salt, date, payload, version)
-	hkdf := hkdf.New(sha256.New, token.ikm, salt, []byte(AuthInfo))
+	hkdf := hkdf.New(sha256.New, token.IKM, salt, []byte(AuthInfo))
 	hkdfBytes := streamToBytes(hkdf)
 
 	if hkdfBytes == nil {
@@ -126,16 +125,4 @@ func NewAuthorization(httpMethod string, uri string, token Token, date time.Time
 	h.Write(sig)
 
 	return &Authorization{token: token, salt: salt, date: date, signature: signature, hmac: h.Sum(nil), version: version}, nil
-}
-
-// Helper function to get first 32 bytes of HMAC
-func streamToBytes(stream io.Reader) []byte {
-	out := make([]byte, 32)
-
-	n, err := io.ReadFull(stream, out)
-	if n != 32 || err != nil {
-		return nil
-	}
-
-	return out
 }

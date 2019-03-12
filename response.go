@@ -231,7 +231,7 @@ func GetPublicKeyFromResponse(response []byte) ([]byte, error) {
 // GetSigningPublicKeyFromResponse Extracts the siging public key from a v3 response
 func GetSigningPublicKeyFromResponse(response []byte) ([]byte, error) {
 	version, err := GetVersion(response)
-	if err == nil {
+	if err != nil {
 		return nil, err
 	}
 
@@ -241,7 +241,7 @@ func GetSigningPublicKeyFromResponse(response []byte) ([]byte, error) {
 			return nil, ErrResponseMessageLength
 		}
 
-		return response[messageLength-160 : messageLength-160+32], nil
+		return response[messageLength-160 : (messageLength - 160 + 32)], nil
 	}
 
 	return nil, ErrResponseNotSuitableForPublicKeyExtraction

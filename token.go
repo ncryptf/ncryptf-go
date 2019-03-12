@@ -3,11 +3,12 @@ package ncryptf
 // #cgo pkg-config: libsodium
 // #include <stdlib.h>
 // #include <sodium.h>
+import "C"
+
 import (
 	"errors"
 	"time"
-
-	"github.com/jamesruan/sodium"
+	"unsafe"
 )
 
 var (
@@ -20,23 +21,32 @@ var (
 
 // Token structure
 type Token struct {
-	accessToken  string
-	refreshToken string
-	ikm          sodium.Bytes
-	signature    sodium.Bytes
-	expiresAt    int64
+	AccessToken  string
+	RefreshToken string
+	IKM          []byte
+	Signature    []byte
+	ExpiresAt    int64
 }
 
 // IsExpired returns true if the token is expired, and false otherwise
 func (t *Token) IsExpired() bool {
 	now := int64(time.Now().Unix())
-	return now > t.expiresAt
+	return now > t.ExpiresAt
 }
 
 // GetSignaturePublicKey retrieves the signature public key from the private componentz
-func (t *Token) GetSignaturePublicKey() []byte {
-	ssk := sodium.SignSecretKey{Bytes: t.signature}
-	return ssk.ToBox().Bytes
+func (t *Token) GetSignaturePublicKey() ([]byte, error) {
+	publicKey := make([]byte, 32)
+	db := bytePointer(t.Signature)
+	result := int(C.crypto_sign_ed25519_sk_to_pk(
+		(*C.uchar)(unsafe.Pointer(&publicKey[0])),
+		(*C.uchar)(db)))
+
+	if result == 0 {
+		return publicKey, nil
+	}
+
+	return nil, ErrTokenSignatureSize
 }
 
 // NewToken creates a token struct
@@ -49,5 +59,5 @@ func NewToken(accessToken string, refreshToken string, ikm []byte, signature []b
 		return nil, ErrTokenSignatureSize
 	}
 
-	return &Token{accessToken: accessToken, refreshToken: refreshToken, ikm: ikm, signature: signature, expiresAt: expiresAt}, nil
+	return &Token{AccessToken: accessToken, RefreshToken: refreshToken, IKM: ikm, Signature: signature, ExpiresAt: expiresAt}, nil
 }
