@@ -75,7 +75,7 @@ if err != nil {
 // Handle token parsing failure
 ```
 
-> Note that the `date` property should be pore-offset when calling `Authorization` to prevent time skewing.
+> Note that the `date` property should be pre-offset when calling `Authorization` to prevent time skewing.
 
 The `payload` parameter should be a JSON serializable string.
 
@@ -117,8 +117,6 @@ The rationale for this functionality includes but is not limited to:
 4. Need to ensure confidentiality of user submitted credentials to the API for authentication
 
 The primary reason you may want to establish an encrypted session with the API itself is to ensure confidentiality of the IKM to prevent data leakages over untrusted networks to avoid information being exposed in a Cloudflare like incident (or any man-in-the-middle attack). Encrypted sessions enable you to utilize a service like Cloudflare should a memory leak occur again with confidence that the IKM and other secure data would not be exposed.
-
-To encrypt, decrypt, sign, and verify messages, you'll need to be able to generate the appropriate keys. Internally, this library uses [lazysodium-java](https://github.com/terl/lazysodium-java) to perform all necessary cryptography functions, though any libsodium implementation for Java would suffice.
 
 #### Encryption Keys
 
