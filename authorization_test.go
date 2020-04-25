@@ -61,3 +61,23 @@ func TestVerify(t *testing.T) {
 		assert.Equal(t, true, auth2.Verify(auth2.GetHMAC(), *auth2, 90), "Verify succeeds")
 	}
 }
+
+func TestV1Decrypt(t *testing.T) {
+	instance := NewInstance(t)
+
+	for _, test := range instance.v1HMACHeaders {
+		auth, err := NewAuthorizationFromString(test)
+		assert.Nil(t, err)
+		assert.NotNil(t, auth)
+	}
+}
+
+func TestV2Decrypt(t *testing.T) {
+	instance := NewInstance(t)
+
+	for _, test := range instance.v2HMACHeaders {
+		auth, err := NewAuthorizationFromString(test)
+		assert.Nil(t, err)
+		assert.NotNil(t, auth)
+	}
+}

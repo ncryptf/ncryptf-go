@@ -16,9 +16,10 @@ func (k randomBytes) Size() int {
 
 type jsonAuthorization struct {
 	AccessToken string `json:"access_token"`
-	Date        string
-	Hmac        string
-	Salt        string
+	Date        string `json:"date"`
+	Hmac        string `json:"hmac"`
+	Salt        string `json:"salt"`
+	Version     int    `json:"v"`
 }
 
 func bytePointer(b []byte) *uint8 {

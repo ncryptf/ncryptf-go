@@ -5,8 +5,10 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"math"
+	"regexp"
 	"strings"
 	"time"
 
@@ -18,6 +20,9 @@ import (
 var (
 	// ErrAuthorizationKeySize an error when the key cannot be extracted
 	ErrAuthorizationKeySize = errors.New("Unable to extract key material")
+
+	// ErrNonDecipherableHMACHeader an error when the HMAC header can't be parsed
+	ErrNonDecipherableHMACHeader = errors.New("HMAC header could not be deciphered")
 )
 
 // AuthInfo INFO parameter for HMAC
@@ -40,7 +45,7 @@ func (a *Authorization) GetDate() time.Time {
 
 // GetDateString returns the formatted date string
 func (a *Authorization) GetDateString() string {
-	return a.date.UTC().Format("Mon, 02 Jan 2006 15:04:05 +0000")
+	return a.date.UTC().Format(time.RFC1123Z)
 }
 
 // GetHMAC returns the HMAC byte array
@@ -90,6 +95,48 @@ func (a *Authorization) Verify(hmac []byte, auth Authorization, driftAllowance i
 	}
 
 	return false
+}
+
+// NewAuthorizationFromString Returns a jsonAuthorization object from an HMAC header
+func NewAuthorizationFromString(hmacHeader string) (*jsonAuthorization, error) {
+	if hmacHeader == "" {
+		return nil, ErrNonDecipherableHMACHeader
+	}
+
+	r, _ := regexp.Compile(`^HMAC\s+(...+)$`)
+
+	matches := r.FindStringSubmatch(hmacHeader)
+
+	if strings.Contains(matches[1], ",") {
+		params := strings.Split(matches[1], ",")
+
+		if len(params) != 3 {
+			return nil, ErrNonDecipherableHMACHeader
+		}
+
+		// Generate a token structure with bogus data
+		return &jsonAuthorization{
+			AccessToken: params[0],
+			Hmac:        params[1],
+			Salt:        params[2],
+			Version:     1,
+			Date:        ""}, nil
+	} else {
+		d, err := base64.StdEncoding.DecodeString(matches[1])
+		if err != nil {
+			return nil, ErrNonDecipherableHMACHeader
+		}
+
+		var params jsonAuthorization
+		err = json.Unmarshal(d, &params)
+
+		if err == nil {
+			return &params, nil
+		}
+
+	}
+
+	return nil, ErrNonDecipherableHMACHeader
 }
 
 // GetTimeDrift Returns the drift time between the current time and the provided date
