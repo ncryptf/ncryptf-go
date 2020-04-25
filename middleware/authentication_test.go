@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"encoding/base64"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -20,7 +19,7 @@ type TestCase struct {
 	payload string
 }
 
-func TestServeHttpV2(t *testing.T) {
+func TestServeHttp(t *testing.T) {
 	var testCases = []TestCase{
 		{"GET", "/api/v1/test", ""},
 		{"GET", "/api/v1/test?foo=bar", ""},
@@ -54,43 +53,50 @@ func TestServeHttpV2(t *testing.T) {
 
 	kp := ncryptf.GenerateKeypair()
 	spk := ncryptf.GenerateSigningKeypair()
-	nreq, _ := ncryptf.NewRequest(kp.GetSecretKey(), spk.GetSecretKey())
 
 	for _, test := range testCases {
-		cipher, _ := nreq.Encrypt(test.payload, spk.GetSecretKey())
-		encryptedPayload := base64.StdEncoding.EncodeToString(cipher)
-		req := httptest.NewRequest(
-			test.method,
-			"https://127.0.0.1/"+test.uri,
-			strings.NewReader(encryptedPayload),
-		)
+		// Test version 1 and 2
+		for version := 1; version <= 2; version++ {
+			nreq, _ := ncryptf.NewRequest(kp.GetSecretKey(), spk.GetSecretKey())
+			cipher, _ := nreq.Encrypt(test.payload, spk.GetSecretKey())
+			encryptedPayload := base64.StdEncoding.EncodeToString(cipher)
+			req := httptest.NewRequest(
+				test.method,
+				"https://127.0.0.1"+test.uri,
+				strings.NewReader(encryptedPayload), // encryptedPayload will be "" for GET requests without a body
+			)
 
-		tkn, _ := gtfas("")
-		auth, _ := ncryptf.NewAuthorization(
-			test.method,
-			test.uri,
-			tkn,
-			time.Now(),
-			test.payload,
-			2,
-			nil,
-		)
+			// Grab the generated token from the built-in helper
+			tkn, _ := gtfas("")
+			auth, _ := ncryptf.NewAuthorization(
+				test.method,
+				test.uri,
+				tkn,
+				time.Now(),
+				test.payload,
+				version,
+				nil,
+			)
 
-		req.Header.Set("Accept", "application/vnd.ncryptf+json")
-		req.Header.Set("Content-Type", "application/vnd.ncryptf+json")
-		req.Header.Set("Authorization", auth.GetHeader())
-		req.Header.Set("X-Date", auth.GetDateString())
-		authen := NewAuthentication(gtfas, guft)
-		recorder := httptest.NewRecorder()
-		next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(200)
-			w.Header().Set("Content-Type", "application/json")
-			return
-		})
+			req.Header.Set("Accept", "application/vnd.ncryptf+json")
+			req.Header.Set("Content-Type", "application/vnd.ncryptf+json")
+			req.Header.Set("Authorization", auth.GetHeader())
 
-		authen.ServeHTTP(recorder, req, next)
-		result := recorder.Result()
-		assert.Equal(t, result.Header.Get("Status"), 200, "HTTP status is 200")
-		fmt.Printf("%+v\n", result)
+			if version == 1 {
+				req.Header.Set("X-Date", auth.GetDateString())
+			}
+
+			authen := NewAuthentication(gtfas, guft)
+			recorder := httptest.NewRecorder()
+			next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(200)
+				w.Header().Set("Content-Type", "application/json")
+				return
+			})
+
+			authen.ServeHTTP(recorder, req, next)
+			result := recorder.Result()
+			assert.Equal(t, result.StatusCode, 200, "HTTP status is 200")
+		}
 	}
 }

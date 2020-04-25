@@ -29,7 +29,6 @@ go test ./...
 
 ## Documentation
 
-
 ## HMAC+HKDF Authentication
 
 HMAC+HKDF Authentication is an Authentication method that allows ensures the request is not tampered with in transit. This provides resiliance not only against network layer manipulation, but also man-in-the-middle attacks.
@@ -215,3 +214,65 @@ The version 2 payload is described as follows. Each component is concatanated to
 | Signature Public Key | 32 BYTES |
 | Signature or raw request body | 64 BYTES |
 | Checksum of prior elements concatonated together | 64 BYTES |
+
+## Middleware
+
+Ncryptf supports standard net/http middlewares.
+
+### Authentication
+
+Authenticated sessions can be validated for v1 and v2 API requests. Two function definitions are required to retrieve a secure token from your backend, and to retrieve a user object of your choosing from your datastore:
+
+```
+getTokenFromAccessString := func(accessString string) (ncryptf.Token, error) {
+    // Convert the provided access string into a ncryptf.Token instance
+    return ncryptf.Token{...}, nil
+}
+
+getUserFromToken := func(token ncryptf.Token) (interface{}, error) {
+    // Use what makes sense for your application as `interface{}` is the return type. An integer user id, or a full user object from your database will work
+    return 1, nil
+}
+```
+
+A very simple example with negroni is as follows:
+
+```
+package main
+
+import (
+  "fmt"
+  "log"
+  "net/http"
+  "time"
+
+  "github.com/urfave/negroni"
+)
+
+func main() {
+    mux := http.NewServeMux()
+    mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+        fmt.Fprintf(w, "Welcome to the home page!")
+    })
+
+    middlewares := negroni.New()
+    middlewares.Use(NewAuthentication(getTokenFromAccessString, getUserFromToken))
+    middlewares.useHandler(mux)
+
+    s := &http.Server{
+        Addr:           ":8080",
+        Handler:        n,
+        ReadTimeout:    10 * time.Second,
+        WriteTimeout:   10 * time.Second,
+        MaxHeaderBytes: 1 << 20,
+    }
+    log.Fatal(s.ListenAndServe())
+}
+```
+
+### Secure Request Parsing
+
+### Secure Response Parsing
+
+
+> Refer to `middleware/*_test.go` for examples.

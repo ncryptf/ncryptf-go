@@ -98,10 +98,14 @@ func (a *Authentication) ServeHTTP(rw http.ResponseWriter, r *http.Request, next
 
 			// Validate the auth header
 			if auth.Verify(hmac, *auth, a.driftTimeAllowance) {
+				rawBody, err := ioutil.ReadAll(r.Body)
+				if err != nil {
+					a.returnError(rw)
+					return
+				}
 
 				// For V2 responses validate the signature
-				if r.Header.Get("Content-Type") == "application/vnd.ncryptf+json" {
-					rawBody, err := ioutil.ReadAll(r.Body)
+				if len(rawBody) > 0 && r.Header.Get("Content-Type") == "application/vnd.ncryptf+json" {
 
 					responseBodyVersion, err := ncryptf.GetVersion(rawBody)
 					if err != nil {
@@ -140,12 +144,10 @@ func (a *Authentication) ServeHTTP(rw http.ResponseWriter, r *http.Request, next
 				context.WithValue(ctx, "ncryptf-user", user)
 
 				next(rw, r.WithContext(ctx))
+				return
 			}
 		}
 	}
-
-	a.returnError(rw)
-	return
 }
 
 func (a *Authentication) returnError(rw http.ResponseWriter) {
@@ -153,7 +155,14 @@ func (a *Authentication) returnError(rw http.ResponseWriter) {
 }
 
 func (a *Authentication) getRequestURI(r *http.Request) string {
-	return r.URL.String()
+	path := r.URL.Path
+	query := r.URL.RawQuery
+
+	if query != "" {
+		return path + "?" + query
+	}
+
+	return path
 }
 
 func (a *Authentication) getRequestBody(r *http.Request) string {
