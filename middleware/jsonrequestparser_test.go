@@ -4,15 +4,17 @@ import (
 	"encoding/base64"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/ncryptf/ncryptf-go"
+	"github.com/vmihailenco/msgpack/v4"
+
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAuthenticationServeHttp(t *testing.T) {
+func TestJsonRequestParserServeHttp(t *testing.T) {
 	var testCases = []TestCase{
 		{"GET", "/api/v1/test", ""},
 		{"GET", "/api/v1/test?foo=bar", ""},
@@ -25,69 +27,64 @@ func TestAuthenticationServeHttp(t *testing.T) {
 		{"DELETE", "/api/v1/test?foo=bar", "{\"alpha\": [\"a\", \"b\", \"c\"],\"obj\": {\"ints\": [1, 2, 3],\"floats\": [0.0, 1.1, 1.2, 1.3],\"bools\": [true, false],\"nil\": null,\"int\": 13,\"float\": 3.1415,\"bool\": true,\"nesting\": {\"nested\": true}}}"},
 	}
 
-	gtfas := func(accessString string) (ncryptf.Token, error) {
-		var date = time.Now()
-
-		ikm, _ := base64.StdEncoding.DecodeString("f2mTaH9vkZZQyF7SxVeXDlOSDbVwjUzhdXv2T/YYO8k=")
-
-		signature, _ := base64.StdEncoding.DecodeString("7v/CdiGoEI7bcj7R2EyDPH5nrCd2+7rHYNACB+Kf2FMx405und2KenGjNpCBPv0jOiptfHJHiY3lldAQTGCdqw==")
-
-		return ncryptf.Token{
-			AccessToken:  "x2gMeJ5Np0CcKpZav+i9iiXeQBtaYMQ/yeEtcOgY3J",
-			RefreshToken: "LRSEe5zHb1aq20Hr9te2sQF8sLReSkO8bS1eD/9LDM8",
-			IKM:          ikm,
-			Signature:    signature,
-			ExpiresAt:    (date.Add(time.Hour * 4)).Unix()}, nil
-	}
-
-	guft := func(token ncryptf.Token) (interface{}, error) {
-		return 1, nil
-	}
-
 	kp := ncryptf.GenerateKeypair()
 	spk := ncryptf.GenerateSigningKeypair()
-
+	cacheManager := GetCacheManager()
 	for _, test := range testCases {
 		// Test version 1 and 2
 		for version := 1; version <= 2; version++ {
-			nreq, _ := ncryptf.NewRequest(kp.GetSecretKey(), spk.GetSecretKey())
-			cipher, _ := nreq.EncryptWithVersion(test.payload, spk.GetSecretKey(), version)
+			ek := NewEncryptionKey()
+			dataContainer := ek.ExportContainer()
+			b, err := msgpack.Marshal(dataContainer)
+			assert.Nil(t, err)
+
+			payload, _ := strconv.Unquote(test.payload)
+
+			cacheManager.Set(ek.GetHashIdentifier(), b, nil)
+
+			nreq, err := ncryptf.NewRequest(kp.GetSecretKey(), spk.GetSecretKey())
+			assert.Nil(t, err)
+
+			cipher, err := nreq.EncryptWithVersion(payload, ek.GetBoxPublicKey(), version)
+			assert.Nil(t, err)
+
 			encryptedPayload := base64.StdEncoding.EncodeToString(cipher)
+			nonce := base64.StdEncoding.EncodeToString(nreq.GetNonce())
 			req := httptest.NewRequest(
 				test.method,
 				"https://127.0.0.1"+test.uri,
 				strings.NewReader(encryptedPayload), // encryptedPayload will be "" for GET requests without a body
 			)
 
-			// Grab the generated token from the built-in helper
-			tkn, _ := gtfas("")
-			auth, _ := ncryptf.NewAuthorization(
-				test.method,
-				test.uri,
-				tkn,
-				time.Now(),
-				test.payload,
-				version,
-				nil,
-			)
-
-			req.Header.Set("Accept", "application/vnd.ncryptf+json")
-			req.Header.Set("Content-Type", "application/vnd.ncryptf+json")
-			req.Header.Set("Authorization", auth.GetHeader())
-
+			h := base64.StdEncoding.EncodeToString(kp.GetPublicKey())
+			req.Header.Set("x-pubkey", h)
+			req.Header.Set("Content-Type", "application/vnd.ncryptf.json")
+			req.Header.Set("x-hashid", ek.GetHashIdentifier())
 			if version == 1 {
-				req.Header.Set("X-Date", auth.GetDateString())
+				req.Header.Set("x-nonce", nonce)
 			}
 
-			authen := NewAuthentication(gtfas, guft)
-			recorder := httptest.NewRecorder()
 			next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(200)
 				w.Header().Set("Content-Type", "application/json")
+
+				ctx := r.Context()
+				if test.payload != "" {
+					ctxVersion, _ := ctx.Value("ncryptf-version").(int)
+					ctxBody, _ := ctx.Value("ncryptf-decrypted-body").(string)
+					ctxRequestPk, _ := ctx.Value("ncryptf-request-public-key").([]byte)
+					assert.EqualValues(t, version, ctxVersion)
+					assert.EqualValues(t, payload, ctxBody)
+					assert.EqualValues(t, kp.GetPublicKey(), ctxRequestPk)
+				}
+
 				return
 			})
 
-			authen.ServeHTTP(recorder, req, next)
+			recorder := httptest.NewRecorder()
+
+			requestParser := NewJSONReuqestParser(cacheManager, (*EncryptionKey)(nil))
+			requestParser.ServeHTTP(recorder, req, next)
 			result := recorder.Result()
 			assert.Equal(t, result.StatusCode, 200, "HTTP status is 200")
 		}

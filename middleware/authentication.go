@@ -140,8 +140,8 @@ func (a *Authentication) ServeHTTP(rw http.ResponseWriter, r *http.Request, next
 				}
 
 				ctx := r.Context()
-				context.WithValue(ctx, "ncryptf-token", token)
-				context.WithValue(ctx, "ncryptf-user", user)
+				ctx = context.WithValue(ctx, "ncryptf-token", token)
+				ctx = context.WithValue(ctx, "ncryptf-user", user)
 
 				next(rw, r.WithContext(ctx))
 				return
